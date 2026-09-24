@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hover Tracker</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg);
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--text);
+    }
+
+    .tracker-card {
+      position: relative;
+      width: 320px;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      cursor: crosshair;
+      transition: transform 0.1s ease-out, box-shadow 0.2s ease;
+      transform-style: preserve-3d;
+    }
+
+    .tracker-card:hover {
+      box-shadow: 0 25px 50px -12px rgba(56, 189, 248, 0.25);
+    }
+
+    h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.25rem;
+      color: var(--accent);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .metric-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Glow effect following cursor */
+    .glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      pointer-events: none;
+      background: radial-gradient(
+        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(56, 189, 248, 0.15),
+        transparent 40%
+      );
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tracker-card" id="trackerCard">
+    <div class="glow" id="glow"></div>
+    <h3>Hover Tracker</h3>
+    <div class="metrics">
+      <div class="metric-box">
+        <span class="metric-label">Position X</span>
+        <span id="posX">0 px</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Position Y</span>
+        <span id="posY">0 px</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Tilt X</span>
+        <span id="tiltX">0°</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Tilt Y</span>
+        <span id="tiltY">0°</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const card = document.getElementById('trackerCard');
+    const posX = document.getElementById('posX');
+    const posY = document.getElementById('posY');
+    const tiltXDisplay = document.getElementById('tiltX');
+    const tiltYDisplay = document.getElementById('tiltY');
+
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      
+      // Relative coordinates inside the card
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Center-origin coordinates for 3D tilt calculation (-1 to 1)
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const percentX = (x - centerX) / centerX;
+      const percentY = (y - centerY) / centerY;
+
+      // Max tilt angle (degrees)
+      const maxTilt = 15;
+      const tiltX = (-percentY * maxTilt).toFixed(1);
+      const tiltY = (percentX * maxTilt).toFixed(1);
+
+      // Update UI displays
+      posX.textContent = `${Math.round(x)} px`;
+      posY.textContent = `${Math.round(y)} px`;
+      tiltXDisplay.textContent = `${tiltX}°`;
+      tiltYDisplay.textContent = `${tiltY}°`;
+
+      // Update CSS variables for visual tilt and glow
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+      card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+    });
+
+    // Reset rotation on mouse leave
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+      posX.textContent = '0 px';
+      posY.textContent = '0 px';
+      tiltXDisplay.textContent = '0°';
+      tiltYDisplay.textContent = '0°';
+    });
+  </script>
+</body>
+</html>
